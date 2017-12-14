@@ -1,4 +1,4 @@
-package ex02.ServletContainer2;
+package ex03.connector.http;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,14 +12,16 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 
 
 public class RequestFacade implements ServletRequest {
 
-	private ServletRequest request = null;
+	private HttpServletRequest request = null;
+	private String encoding;
 	
-	public RequestFacade(Request request) {
-		this.request = request;
+	public RequestFacade(HttpRequest request) {
+		this.request = (HttpServletRequest) request;
 	}
 	
 	@Override
@@ -31,7 +33,7 @@ public class RequestFacade implements ServletRequest {
 	public Enumeration<String> getAttributeNames() {
 		return request.getAttributeNames();
 	}
-		
+	
 	@Override
 	public String getCharacterEncoding() {
 		return null;
@@ -42,15 +44,10 @@ public class RequestFacade implements ServletRequest {
 		return 0;
 	}
 
-	public long getContentLengthLong() {
-		return 0;
-	}
-
 	@Override
 	public String getContentType() {
 		return null;
-	}
-
+	}	
 
 	@Override
 	public ServletInputStream getInputStream() throws IOException {
@@ -168,7 +165,7 @@ public class RequestFacade implements ServletRequest {
 
 	@Override
 	public void setCharacterEncoding(String arg0) throws UnsupportedEncodingException {
-		// TODO Auto-generated method stub
+		request.setCharacterEncoding(encoding);
 
 	}
 

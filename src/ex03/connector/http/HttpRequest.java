@@ -18,14 +18,17 @@ import java.util.Locale;
 import java.util.Map;
 
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
-
 import org.apache.catalina.util.Enumerator;
 import org.apache.catalina.util.ParameterMap;
 import org.apache.catalina.util.RequestUtil;
+
+import ex03.connector.RequestStream;
 
 
 /**
@@ -37,7 +40,7 @@ import org.apache.catalina.util.RequestUtil;
  * @author lc
  *
  */
-public abstract class HttpRequest implements ServletRequest {
+public class HttpRequest implements ServletRequest {
 
 	private String contentType;
 	private int contentLength;
@@ -54,6 +57,10 @@ public abstract class HttpRequest implements ServletRequest {
 	private String requestedSessionId;
 	private boolean requestedSessionURL;
 	
+	public HttpRequest(InputStream input) {
+		this.stream = input;
+	}
+	
 	/**
 	 * 请求的请求属性
 	 */
@@ -68,10 +75,6 @@ public abstract class HttpRequest implements ServletRequest {
 	 * 请求的上下文路径
 	 */
 	protected String contextPath = "";
-	
-	public HttpRequest(InputStream input) {
-		this.stream = input;
-	}
 	
 	/**
 	 * 与此请求相关的一组 cookies
@@ -200,310 +203,309 @@ public abstract class HttpRequest implements ServletRequest {
 	}
 
 	public void setRequestedSessionCookie(boolean flag) {
-	    this.requestedSessionCookie = flag;
-	  }
+		this.requestedSessionCookie = flag;
+	}
 
-	  public void setRequestedSessionId(String requestedSessionId) {
-	    this.requestedSessionId = requestedSessionId;
-	  }
+	public void setRequestedSessionId(String requestedSessionId) {
+		this.requestedSessionId = requestedSessionId;
+	}
 
-	  public void setRequestedSessionURL(boolean flag) {
-	    requestedSessionURL = flag;
-	  }
+	public void setRequestedSessionURL(boolean flag) {
+		requestedSessionURL = flag;
+	}
 
-	  /* implementation of the HttpServletRequest*/
-	  public Object getAttribute(String name) {
-	    synchronized (attributes) {
-	      return (attributes.get(name));
-	    }
-	  }
+	/* implementation of the HttpServletRequest */
+	public Object getAttribute(String name) {
+		synchronized (attributes) {
+			return (attributes.get(name));
+		}
+	}
 
-	  public Enumeration getAttributeNames() {
-	    synchronized (attributes) {
-	      return (new Enumerator(attributes.keySet()));
-	    }
-	  }
+	public Enumeration getAttributeNames() {
+		synchronized (attributes) {
+			return (new Enumerator(attributes.keySet()));
+		}
+	}
 
-	  public String getAuthType() {
-	    return null;
-	  }
+	public String getAuthType() {
+		return null;
+	}
 
-	  public String getCharacterEncoding() {
-	    return null;
-	  }
+	public String getCharacterEncoding() {
+		return null;
+	}
 
-	  public int getContentLength() {
-	    return contentLength ;
-	  }
+	public int getContentLength() {
+		return contentLength;
+	}
 
-	  public String getContentType() {
-	    return contentType;
-	  }
+	public String getContentType() {
+		return contentType;
+	}
 
-	  public String getContextPath() {
-	    return contextPath;
-	  }
+	public String getContextPath() {
+		return contextPath;
+	}
 
-	  public Cookie[] getCookies() {
-	    synchronized (cookies) {
-	      if (cookies.size() < 1)
-	        return (null);
-	      Cookie results[] = new Cookie[cookies.size()];
-	      return ((Cookie[]) cookies.toArray(results));
-	    }
-	  }
+	public Cookie[] getCookies() {
+		synchronized (cookies) {
+			if (cookies.size() < 1)
+				return (null);
+			Cookie results[] = new Cookie[cookies.size()];
+			return ((Cookie[]) cookies.toArray(results));
+		}
+	}
 
-	  public long getDateHeader(String name) {
-	    String value = getHeader(name);
-	    if (value == null)
-	      return (-1L);
+	public long getDateHeader(String name) {
+		String value = getHeader(name);
+		if (value == null)
+			return (-1L);
 
-	    value += " ";
+		value += " ";
 
-	    // 尝试以各种格式转换日期标题
-	    for (int i = 0; i < formats.length; i++) {
-	      try {
-	        Date date = formats[i].parse(value);
-	        return (date.getTime());
-	      }
-	      catch (ParseException e) {
-	        ;
-	      }
-	    }
-	    throw new IllegalArgumentException(value);
-	  }
+		// 尝试以各种格式转换日期标题
+		for (int i = 0; i < formats.length; i++) {
+			try {
+				Date date = formats[i].parse(value);
+				return (date.getTime());
+			} catch (ParseException e) {
+				;
+			}
+		}
+		throw new IllegalArgumentException(value);
+	}
 
-	  public String getHeader(String name) {
-	    name = name.toLowerCase();
-	    synchronized (headers) {
-	      ArrayList values = (ArrayList) headers.get(name);
-	      if (values != null)
-	        return ((String) values.get(0));
-	      else
-	        return null;
-	    }
-	  }
+	public String getHeader(String name) {
+		name = name.toLowerCase();
+		synchronized (headers) {
+			ArrayList values = (ArrayList) headers.get(name);
+			if (values != null)
+				return ((String) values.get(0));
+			else
+				return null;
+		}
+	}
 
-	  public Enumeration getHeaderNames() {
-	    synchronized (headers) {
-	      return (new Enumerator(headers.keySet()));
-	    }
-	  }
+	public Enumeration getHeaderNames() {
+		synchronized (headers) {
+			return (new Enumerator(headers.keySet()));
+		}
+	}
 
-	  public Enumeration getHeaders(String name) {
-	    name = name.toLowerCase();
-	    synchronized (headers) {
-	      ArrayList values = (ArrayList) headers.get(name);
-	      if (values != null)
-	        return (new Enumerator(values));
-	      else
-	        return (new Enumerator(new ArrayList<>()));
-	    }
-	  }
+	public Enumeration getHeaders(String name) {
+		name = name.toLowerCase();
+		synchronized (headers) {
+			ArrayList values = (ArrayList) headers.get(name);
+			if (values != null)
+				return (new Enumerator(values));
+			else
+				return (new Enumerator(new ArrayList<>()));
+		}
+	}
 
-	  public ServletInputStream getInputStream() throws IOException {
-	    if (reader != null)
-	      throw new IllegalStateException("getInputStream has been called");
+	public ServletInputStream getInputStream() throws IOException {
+		if (reader != null)
+			throw new IllegalStateException("getInputStream has been called");
 
-	    if (stream == null)
-	      stream = getInputStream();
-	    return (ServletInputStream) (stream);
-	  }
+		if (stream == null)
+			stream = getInputStream();
+		return (ServletInputStream) (stream);
+	}
 
-	  public int getIntHeader(String name) {
-	    String value = getHeader(name);
-	    if (value == null)
-	      return (-1);
-	    else
-	      return (Integer.parseInt(value));
-	  }
+	public int getIntHeader(String name) {
+		String value = getHeader(name);
+		if (value == null)
+			return (-1);
+		else
+			return (Integer.parseInt(value));
+	}
 
-	  public Locale getLocale() {
-	    return null;
-	  }
+	public Locale getLocale() {
+		return null;
+	}
 
-	  public Enumeration getLocales() {
-	    return null;
-	  }
+	public Enumeration getLocales() {
+		return null;
+	}
 
-	  public String getMethod() {
-	    return method;
-	  }
+	public String getMethod() {
+		return method;
+	}
 
-	  public String getParameter(String name) {
-	    try {
+	public String getParameter(String name) {
+		try {
 			parseParameters();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	    String values[] = (String[]) parameters.get(name);
-	    if (values != null)
-	      return (values[0]);
-	    else
-	      return (null);
-	  }
+		String values[] = (String[]) parameters.get(name);
+		if (values != null)
+			return (values[0]);
+		else
+			return (null);
+	}
 
-	  public Map getParameterMap() {
-	    try {
+	public Map getParameterMap() {
+		try {
 			parseParameters();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	    return (this.parameters);
-	  }
+		return (this.parameters);
+	}
 
-	  public Enumeration getParameterNames() {
-	    try {
+	public Enumeration getParameterNames() {
+		try {
 			parseParameters();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	    return (new Enumerator(parameters.keySet()));
-	  }
+		return (new Enumerator(parameters.keySet()));
+	}
 
-	  public String[] getParameterValues(String name) {
-	    try {
+	public String[] getParameterValues(String name) {
+		try {
 			parseParameters();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	    String values[] = (String[]) parameters.get(name);
-	    if (values != null)
-	      return (values);
-	    else
-	      return null;
-	  }
+		String values[] = (String[]) parameters.get(name);
+		if (values != null)
+			return (values);
+		else
+			return null;
+	}
 
-	  public String getPathInfo() {
-	    return pathInfo;
-	  }
+	public String getPathInfo() {
+		return pathInfo;
+	}
 
-	  public String getPathTranslated() {
-	    return null;
-	  }
+	public String getPathTranslated() {
+		return null;
+	}
 
-	  public String getProtocol() {
-	    return protocol;
-	  }
+	public String getProtocol() {
+		return protocol;
+	}
 
-	  public String getQueryString() {
-	    return queryString;
-	  }
+	public String getQueryString() {
+		return queryString;
+	}
 
-	  public BufferedReader getReader() throws IOException {
-	    if (stream != null)
-	      throw new IllegalStateException("getInputStream has been called.");
-	    if (reader == null) {
-	      String encoding = getCharacterEncoding();
-	      if (encoding == null)
-	        encoding = "ISO-8859-1";
-	      InputStreamReader isr =
-	        new InputStreamReader(getInputStream(), encoding);
-	        reader = new BufferedReader(isr);
-	    }
-	    return (reader);
-	  }
+	public BufferedReader getReader() throws IOException {
+		if (stream != null)
+			throw new IllegalStateException("getInputStream has been called.");
+		if (reader == null) {
+			String encoding = getCharacterEncoding();
+			if (encoding == null)
+				encoding = "ISO-8859-1";
+			InputStreamReader isr = new InputStreamReader(getInputStream(), encoding);
+			reader = new BufferedReader(isr);
+		}
+		return (reader);
+	}
 
-	  public String getRealPath(String path) {
-	    return null;
-	  }
+	public String getRealPath(String path) {
+		return null;
+	}
 
-	  public String getRemoteAddr() {
-	    return null;
-	  }
+	public String getRemoteAddr() {
+		return null;
+	}
 
-	  public String getRemoteHost() {
-	    return null;
-	  }
+	public String getRemoteHost() {
+		return null;
+	}
 
-	  public String getRemoteUser() {
-	    return null;
-	  }
+	public String getRemoteUser() {
+		return null;
+	}
 
-	  public RequestDispatcher getRequestDispatcher(String path) {
-	    return null;
-	  }
+	public RequestDispatcher getRequestDispatcher(String path) {
+		return null;
+	}
 
-	  public String getScheme() {
-	   return null;
-	  }
+	public String getScheme() {
+		return null;
+	}
 
-	  public String getServerName() {
-	    return null;
-	  }
+	public String getServerName() {
+		return null;
+	}
 
-	  public int getServerPort() {
-	    return 0;
-	  }
+	public int getServerPort() {
+		return 0;
+	}
 
-	  public String getRequestedSessionId() {
-	    return null;
-	  }
+	public String getRequestedSessionId() {
+		return null;
+	}
 
-	  public String getRequestURI() {
-	    return requestURI;
-	  }
+	public String getRequestURI() {
+		return requestURI;
+	}
 
-	  public StringBuffer getRequestURL() {
-	    return null;
-	  }
+	public StringBuffer getRequestURL() {
+		return null;
+	}
 
-	  public HttpSession getSession() {
-	    return null;
-	  }
+	public HttpSession getSession() {
+		return null;
+	}
 
-	  public HttpSession getSession(boolean create) {
-	    return null;
-	  }
+	public HttpSession getSession(boolean create) {
+		return null;
+	}
 
-	  public String getServletPath() {
-	    return null;
-	  }
+	public String getServletPath() {
+		return null;
+	}
 
-	  public Principal getUserPrincipal() {
-	    return null;
-	  }
+	public Principal getUserPrincipal() {
+		return null;
+	}
 
-	  public boolean isRequestedSessionIdFromCookie() {
-	    return false;
-	  }
+	public boolean isRequestedSessionIdFromCookie() {
+		return false;
+	}
 
-	  public boolean isRequestedSessionIdFromUrl() {
-	    return isRequestedSessionIdFromURL();
-	  }
+	public boolean isRequestedSessionIdFromUrl() {
+		return isRequestedSessionIdFromURL();
+	}
 
-	  public boolean isRequestedSessionIdFromURL() {
-	    return false;
-	  }
+	public boolean isRequestedSessionIdFromURL() {
+		return false;
+	}
 
-	  public boolean isRequestedSessionIdValid() {
-	    return false;
-	  }
+	public boolean isRequestedSessionIdValid() {
+		return false;
+	}
 
-	  public boolean isSecure() {
-	    return false;
-	  }
+	public boolean isSecure() {
+		return false;
+	}
 
-	  public boolean isUserInRole(String role) {
-	    return false;
-	  }
+	public boolean isUserInRole(String role) {
+		return false;
+	}
 
-	  public void removeAttribute(String attribute) {
-	  }
+	public void removeAttribute(String attribute) {
+	}
 
-	  public void setAttribute(String key, Object value) {
-	  }
+	public void setAttribute(String key, Object value) {
+	}
 
-	  /**
-	   * 设置随此请求一起发送的权限
-	   * @param 授权新的权限
-	   */
-	  public void setAuthorization(String authorization) {
-	    this.authorization = authorization;
-	  }
+	/**
+	 * 设置随此请求一起发送的权限
+	 * 
+	 * @param 授权新的权限
+	 */
+	public void setAuthorization(String authorization) {
+		this.authorization = authorization;
+	}
 
-	  public void setCharacterEncoding(String encoding) throws UnsupportedEncodingException {
-	  }
+	public void setCharacterEncoding(String encoding) throws UnsupportedEncodingException {
+	}
 
 	public void setQueryString(String queryString) {
 		this.queryString = queryString;
@@ -521,4 +523,25 @@ public abstract class HttpRequest implements ServletRequest {
 		this.protocol = protocol;
 	}
 
+	public String getLocalName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public int getLocalPort() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public ServletInputStream createInputStream() throws IOException {
+		return (new RequestStream(this));
+	}
+
+	public void setContentLength(int n) {
+		this.contentLength = n;
+	}
+
+	public void setContentType(String value) {
+		this.contentType = value;
+	}
 }

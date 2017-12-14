@@ -44,7 +44,7 @@ public class HttpConnector implements Runnable {
 			} catch (Exception e) {
 				continue;
 			}
-			//
+			//把这个套接字交给一个HttpProcessor
 			HttpProcessor processor = new HttpProcessor(this);
 			processor.process(socket);
 		}

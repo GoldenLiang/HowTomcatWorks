@@ -24,4 +24,9 @@ public class StringManager {
 		}
 		return mgr;
 	}
+
+	public String getString(String string) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
