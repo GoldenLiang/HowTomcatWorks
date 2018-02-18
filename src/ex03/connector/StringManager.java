@@ -12,7 +12,7 @@ public class StringManager {
 	private static Hashtable managers = new Hashtable();
 	private String packageName;
 	
-	public StringManager(String packageName) {
+	private StringManager(String packageName) {
 		this.packageName = packageName;
 	}
 
@@ -26,7 +26,6 @@ public class StringManager {
 	}
 
 	public String getString(String string) {
-		// TODO Auto-generated method stub
-		return null;
+		return "HTTP connector has already been initialized";
 	}
 }
